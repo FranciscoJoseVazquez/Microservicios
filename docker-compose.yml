@@ -1,0 +1,204 @@
+version: "3.8"
+
+services:
+  rabbitmq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "9890:15672"
+      - "8888:5672"
+      - "15692:15692"
+    hostname: stats
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/mnesia
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    networks:
+      - rabbitmq_network
+
+  db:
+    image: postgres:14
+    container_name: db
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: EstructuraMicroservicios
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    ports:
+      - "5432:5432"
+    networks:
+      - rabbitmq_network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8081:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - db
+    networks:
+      - rabbitmq_network
+
+  consumer_sms:
+    build:
+      context: ./consumer_sms
+      dockerfile: Dockerfile
+    container_name: consumer_sms
+    depends_on:
+      - rabbitmq
+      - db
+    volumes:
+      - ./consumer_sms:/var/www/html
+    working_dir: /var/www/html
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8084:80"
+
+  consumer_telegram:
+    build:
+      context: ./consumer_telegram
+      dockerfile: Dockerfile
+    container_name: consumer_telegram
+    depends_on:
+      - rabbitmq
+      - db
+    volumes:
+      - ./consumer_telegram:/var/www/html
+    working_dir: /var/www/html
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8085:80"
+
+  consumer_email:
+    build:
+      context: ./consumer_email
+      dockerfile: Dockerfile
+    container_name: consumer_email
+    depends_on:
+      - rabbitmq
+      - db
+    volumes:
+      - ./consumer_email:/var/www/html
+    working_dir: /var/www/html
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8086:80"
+
+  consumer_whatsapp:
+    build:
+      context: ./consumer_whatsapp
+      dockerfile: Dockerfile
+    container_name: consumer_whatsapp
+    depends_on:
+      - rabbitmq
+      - db
+    volumes:
+      - ./consumer_whatsapp:/var/www/html
+    working_dir: /var/www/html
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8087:80"
+
+  tokens:
+    build:
+      context: ./tokens
+      dockerfile: Dockerfile
+    container_name: token
+    depends_on:
+      - rabbitmq
+      - db
+    volumes:
+      - ./tokens:/var/www/html
+    working_dir: /var/www/html
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8090:80"
+
+  logs:
+    build:
+      context: ./Logs
+      dockerfile: Dockerfile
+    container_name: logs
+    depends_on:
+      - rabbitmq
+      - db
+    volumes:
+      - ./Logs:/var/www/html
+    working_dir: /var/www/html
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8900:80"
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: always 
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - rabbitmq_network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - rabbitmq_network
+
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    restart: always
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - rabbitmq_network
+
+networks:
+  rabbitmq_network:
+    name: rabbitmq_network
+    driver: bridge
+
+volumes:
+  rabbitmq_data:
+    driver: local
+  grafana_data:
+    driver: local
+  portainer_data:
+    driver: local
+  pgdata:
+    driver: local
+  pgadmin_data:
+    driver: local
