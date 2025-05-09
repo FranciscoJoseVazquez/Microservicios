@@ -53,37 +53,37 @@ services:
     networks:
       - rabbitmq_network
 
-  consumer_sms:
-    build:
-      context: ./consumer_sms
-      dockerfile: Dockerfile
-    container_name: consumer_sms
-    depends_on:
-      - rabbitmq
-      - db
-    volumes:
-      - ./consumer_sms:/var/www/html
-    working_dir: /var/www/html
-    networks:
-      - rabbitmq_network
-    ports:
-      - "8084:80"
-
-  consumer_telegram:
-    build:
-      context: ./consumer_telegram
-      dockerfile: Dockerfile
-    container_name: consumer_telegram
-    depends_on:
-      - rabbitmq
-      - db
-    volumes:
-      - ./consumer_telegram:/var/www/html
-    working_dir: /var/www/html
-    networks:
-      - rabbitmq_network
-    ports:
-      - "8085:80"
+# consumer_sms:
+#   build:
+#     context: ./consumer_sms
+#     dockerfile: Dockerfile
+#   container_name: consumer_sms
+#   depends_on:
+#     - rabbitmq
+#     - db
+#   volumes:
+#     - ./consumer_sms:/var/www/html
+#   working_dir: /var/www/html
+#   networks:
+#     - rabbitmq_network
+#   ports:
+#     - "8084:80"
+#
+# consumer_telegram:
+#   build:
+#     context: ./consumer_telegram
+#     dockerfile: Dockerfile
+#   container_name: consumer_telegram
+#   depends_on:
+#     - rabbitmq
+#     - db
+#   volumes:
+#     - ./consumer_telegram:/var/www/html
+#   working_dir: /var/www/html
+#   networks:
+#     - rabbitmq_network
+#   ports:
+#     - "8085:80"
 
   consumer_email:
     build:
@@ -101,21 +101,21 @@ services:
     ports:
       - "8086:80"
 
-  consumer_whatsapp:
-    build:
-      context: ./consumer_whatsapp
-      dockerfile: Dockerfile
-    container_name: consumer_whatsapp
-    depends_on:
-      - rabbitmq
-      - db
-    volumes:
-      - ./consumer_whatsapp:/var/www/html
-    working_dir: /var/www/html
-    networks:
-      - rabbitmq_network
-    ports:
-      - "8087:80"
+#  consumer_whatsapp:
+#    build:
+#      context: ./consumer_whatsapp
+#      dockerfile: Dockerfile
+#    container_name: consumer_whatsapp
+#    depends_on:
+#      - rabbitmq
+#      - db
+#    volumes:
+#      - ./consumer_whatsapp:/var/www/html
+#    working_dir: /var/www/html
+#    networks:
+#      - rabbitmq_network
+#    ports:
+#      - "8087:80"
 
   tokens:
     build:
@@ -132,6 +132,38 @@ services:
       - rabbitmq_network
     ports:
       - "8090:80"
+
+#  monitores:
+#    build:
+#      context: ./monitores
+#      dockerfile: Dockerfile
+#    container_name: monitores
+#    depends_on:
+#      - rabbitmq
+#      - db
+#    volumes:
+#      - ./monitores:/var/www/html
+#    working_dir: /var/www/html
+#    networks:
+#      - rabbitmq_network
+#    ports:
+#      - "8091:80"
+
+  sender:
+    build:
+      context: ./sender
+      dockerfile: Dockerfile
+    container_name: sender
+    depends_on:
+      - rabbitmq
+      - db
+    volumes:
+      - ./sender:/var/www/html
+    working_dir: /var/www/html
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8092:80"
 
   logs:
     build:
