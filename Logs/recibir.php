@@ -9,7 +9,7 @@ $attempt = 0;
 
 do {
     try {
-        $connection = new AMQPStreamConnection('rabbitmq', 5672, 'admin', 'admin');
+        $connection = new AMQPStreamConnection('rabbitmq', 5672, 'ATMadmin', 'ATMadmin_1243');
         $channel = $connection->channel();
         break;
     } catch (Exception $e) {

@@ -5,7 +5,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 // Conexión a PostgreSQL
 try {
-    $pdo = new PDO("pgsql:host=postgres_db;dbname=EstructuraMicroservicios", 'admin', 'admin', [
+    $pdo = new PDO("pgsql:host=postgres_db;dbname=EstructuraMicroservicios", 'ATMadmin', 'ATMadmin_1243', [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ]);
 } catch (PDOException $e) {

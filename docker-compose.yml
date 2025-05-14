@@ -15,8 +15,8 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq/mnesia
     environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin
+      RABBITMQ_DEFAULT_USER: ATMadmin
+      RABBITMQ_DEFAULT_PASS: ATMadmin_1243
     networks:
       - rabbitmq_network
 
@@ -25,8 +25,8 @@ services:
     container_name: db
     restart: always
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: ATMadmin
+      POSTGRES_PASSWORD: ATMadmin_1243
       POSTGRES_DB: EstructuraMicroservicios
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -199,8 +199,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=ATMadmin
+      - GF_SECURITY_ADMIN_PASSWORD=ATMadmin_1243
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
