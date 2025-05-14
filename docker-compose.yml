@@ -133,21 +133,22 @@ services:
     ports:
       - "8090:80"
 
-#  monitores:
-#    build:
-#      context: ./monitores
-#      dockerfile: Dockerfile
-#    container_name: monitores
-#    depends_on:
-#      - rabbitmq
-#      - db
-#    volumes:
-#      - ./monitores:/var/www/html
-#    working_dir: /var/www/html
-#    networks:
-#      - rabbitmq_network
-#    ports:
-#      - "8091:80"
+  monitores:
+    build:
+      context: ./monitores
+      dockerfile: Dockerfile
+    container_name: monitores
+    depends_on:
+      - rabbitmq
+      - db
+    volumes:
+      - ./monitores:/var/www/html
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /var/www/html
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8091:80"
 
   sender:
     build:

@@ -20,8 +20,8 @@ $rawOutput = shell_exec("docker images -q pruebas_consumer_email");
 $imageExists = trim($rawOutput ?? '');
 if ($imageExists === '') {
     echo "Construyendo imagen base 'pruebas_consumer_email'...\n";
-    $projectRoot = realpath(__DIR__ . '/../'); 
-    $output = shell_exec("docker build -t pruebas_consumer_email " . escapeshellarg("{$projectRoot}/consumer_email") . " 2>&1");
+    $projectRoot = realpath(__DIR__ . '/../consumer_email');
+    $output = shell_exec("docker build -t pruebas_consumer_email " . escapeshellarg("{$projectRoot}") . " 2>&1");
     echo $output;
 }
 
