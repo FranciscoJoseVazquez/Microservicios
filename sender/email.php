@@ -11,7 +11,7 @@ $channel = $connection->channel();
 // Declarar la cola
 $channel->queue_declare('correos', false, true, false, false);
 
-for ($i = 1; $i <= 50; $i++) {
+for ($i = 1; $i <= 10000; $i++) {
     $mensajeTexto = "Mensaje número $i";
     $msg = new AMQPMessage($mensajeTexto, ['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT]);
     $channel->basic_publish($msg, '', 'correos');
