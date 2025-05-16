@@ -78,7 +78,7 @@ while (true) {
         $toRemove = [];
 
         for ($i = $runningCount; $i > $neededConsumers; $i--) {
-            $name = "logs_$i";
+            $name = "consumer_logs_$i";
             echo "Marcado para eliminación: $name\n";
             $toRemove[] = $name;
 
