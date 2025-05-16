@@ -9,7 +9,7 @@ $connection = new AMQPStreamConnection('rabbitmq', 5672, 'ATMadmin', 'ATMadmin_1
 $channel = $connection->channel();
 
 // Declarar las colas
-$colas = ['whatsapp', 'cola_telegram', 'cola_sms', 'correos'];
+$colas = ['whatsapp', 'cola_telegram', 'cola_sms', 'logs'];
 foreach ($colas as $cola) {
     $channel->queue_declare($cola, false, true, false, false);
 }

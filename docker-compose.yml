@@ -121,6 +121,23 @@ services:
     ports:
       - "8087:80"
 
+  logs:
+      build:
+        context: ./Logs
+        dockerfile: Dockerfile
+      container_name: logs
+      image: img_consumer_logs
+      depends_on:
+        - rabbitmq
+        - db
+      volumes:
+        - ./Logs:/var/www/html
+      working_dir: /var/www/html
+      networks:
+        - rabbitmq_network
+      ports:
+        - "8900:80"
+
   tokens:
     build:
       context: ./tokens
@@ -204,6 +221,23 @@ services:
       - rabbitmq_network
     ports:
       - "8094:80"
+  
+  monitor_logs:
+    build:
+      context: ./monitor_logs
+      dockerfile: Dockerfile
+    container_name: monitor_logs
+    depends_on:
+      - rabbitmq
+      - db
+    volumes:
+      - ./monitor_logs:/var/www/html
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /var/www/html
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8095:80"
 
   sender:
     build:
@@ -220,22 +254,6 @@ services:
       - rabbitmq_network
     ports:
       - "8100:80"
-
-  logs:
-    build:
-      context: ./Logs
-      dockerfile: Dockerfile
-    container_name: logs
-    depends_on:
-      - rabbitmq
-      - db
-    volumes:
-      - ./Logs:/var/www/html
-    working_dir: /var/www/html
-    networks:
-      - rabbitmq_network
-    ports:
-      - "8900:80"
 
   prometheus:
     image: prom/prometheus
