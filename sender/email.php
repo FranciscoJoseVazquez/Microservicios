@@ -8,14 +8,20 @@ use PhpAmqpLib\Message\AMQPMessage;
 $connection = new AMQPStreamConnection('rabbitmq', 5672, 'ATMadmin', 'ATMadmin_1243');
 $channel = $connection->channel();
 
-// Declarar la cola
-$channel->queue_declare('correos', false, true, false, false);
+// Declarar las colas
+$colas = ['whatsapp', 'cola_telegram', 'cola_sms', 'correos'];
+foreach ($colas as $cola) {
+    $channel->queue_declare($cola, false, true, false, false);
+}
 
-for ($i = 1; $i <= 10000; $i++) {
+// Enviar mensajes a cada cola
+for ($i = 1; $i <= 100000; $i++) {
     $mensajeTexto = "Mensaje número $i";
-    $msg = new AMQPMessage($mensajeTexto, ['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT]);
-    $channel->basic_publish($msg, '', 'correos');
-    echo "Enviado: $mensajeTexto\n";
+    foreach ($colas as $cola) {
+        $msg = new AMQPMessage($mensajeTexto, ['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT]);
+        $channel->basic_publish($msg, '', $cola);
+        echo "Enviado a $cola: $mensajeTexto\n";
+    }
 }
 
 // Cerrar conexión

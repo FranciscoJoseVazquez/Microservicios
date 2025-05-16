@@ -53,43 +53,46 @@ services:
     networks:
       - rabbitmq_network
 
-# consumer_sms:
-#   build:
-#     context: ./consumer_sms
-#     dockerfile: Dockerfile
-#   container_name: consumer_sms
-#   depends_on:
-#     - rabbitmq
-#     - db
-#   volumes:
-#     - ./consumer_sms:/var/www/html
-#   working_dir: /var/www/html
-#   networks:
-#     - rabbitmq_network
-#   ports:
-#     - "8084:80"
-#
-# consumer_telegram:
-#   build:
-#     context: ./consumer_telegram
-#     dockerfile: Dockerfile
-#   container_name: consumer_telegram
-#   depends_on:
-#     - rabbitmq
-#     - db
-#   volumes:
-#     - ./consumer_telegram:/var/www/html
-#   working_dir: /var/www/html
-#   networks:
-#     - rabbitmq_network
-#   ports:
-#     - "8085:80"
+  consumer_sms:
+    build:
+      context: ./consumer_sms
+      dockerfile: Dockerfile
+    container_name: consumer_sms
+    image: img_consumer_sms
+    depends_on:
+      - rabbitmq
+      - db
+    volumes:
+      - ./consumer_sms:/var/www/html
+    working_dir: /var/www/html
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8084:80"
+ 
+  consumer_telegram:
+    build:
+      context: ./consumer_telegram
+      dockerfile: Dockerfile
+    container_name: consumer_telegram
+    image: img_consumer_telegram
+    depends_on:
+      - rabbitmq
+      - db
+    volumes:
+      - ./consumer_telegram:/var/www/html
+    working_dir: /var/www/html
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8085:80"
 
   consumer_email:
     build:
       context: ./consumer_email
       dockerfile: Dockerfile
     container_name: consumer_email
+    image: img_consumer_email
     depends_on:
       - rabbitmq
       - db
@@ -101,21 +104,22 @@ services:
     ports:
       - "8086:80"
 
-#  consumer_whatsapp:
-#    build:
-#      context: ./consumer_whatsapp
-#      dockerfile: Dockerfile
-#    container_name: consumer_whatsapp
-#    depends_on:
-#      - rabbitmq
-#      - db
-#    volumes:
-#      - ./consumer_whatsapp:/var/www/html
-#    working_dir: /var/www/html
-#    networks:
-#      - rabbitmq_network
-#    ports:
-#      - "8087:80"
+  consumer_whatsapp:
+    build:
+      context: ./consumer_whatsapp
+      dockerfile: Dockerfile
+    container_name: consumer_whatsapp
+    image: img_consumer_whatsapp
+    depends_on:
+      - rabbitmq
+      - db
+    volumes:
+      - ./consumer_whatsapp:/var/www/html
+    working_dir: /var/www/html
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8087:80"
 
   tokens:
     build:
@@ -133,22 +137,73 @@ services:
     ports:
       - "8090:80"
 
-  monitores:
+  monitor_email:
     build:
-      context: ./monitores
+      context: ./monitor_email
       dockerfile: Dockerfile
-    container_name: monitores
+    container_name: monitor_email
     depends_on:
       - rabbitmq
       - db
     volumes:
-      - ./monitores:/var/www/html
+      - ./monitor_email:/var/www/html
       - /var/run/docker.sock:/var/run/docker.sock
     working_dir: /var/www/html
     networks:
       - rabbitmq_network
     ports:
       - "8091:80"
+
+  monitor_sms:
+    build:
+      context: ./monitor_sms
+      dockerfile: Dockerfile
+    container_name: monitor_sms
+    depends_on:
+      - rabbitmq
+      - db
+    volumes:
+      - ./monitor_sms:/var/www/html
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /var/www/html
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8092:80"
+
+  monitor_telegram:
+    build:
+      context: ./monitor_telegram
+      dockerfile: Dockerfile
+    container_name: monitor_telegram
+    depends_on:
+      - rabbitmq
+      - db
+    volumes:
+      - ./monitor_telegram:/var/www/html
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /var/www/html
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8093:80"
+
+  monitor_whatsapp:
+    build:
+      context: ./monitor_whatsapp
+      dockerfile: Dockerfile
+    container_name: monitor_whatsapp
+    depends_on:
+      - rabbitmq
+      - db
+    volumes:
+      - ./monitor_whatsapp:/var/www/html
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /var/www/html
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8094:80"
 
   sender:
     build:
@@ -164,7 +219,7 @@ services:
     networks:
       - rabbitmq_network
     ports:
-      - "8092:80"
+      - "8100:80"
 
   logs:
     build:

@@ -7,7 +7,7 @@ use PhpAmqpLib\Message\AMQPMessage;
 $thresholdPerConsumer = 10000;
 
 $prometheusUrl = 'http://prometheus:9090/api/v1/query';
-$query = 'rabbitmq_queue_messages_ready{queue="correos"}';
+$query = 'rabbitmq_queue_messages_ready{queue="cola_sms"}';
 
 // Conexión a RabbitMQ
 $connection = new AMQPStreamConnection('rabbitmq', 5672, 'ATMadmin', 'ATMadmin_1243');
@@ -15,17 +15,17 @@ $channel = $connection->channel();
 $channel->queue_declare('logs', false, true, false, false);
 
 // Verifica si la imagen base ya existe
-$rawOutput = shell_exec("docker images -q pruebas_consumer_email");
+$rawOutput = shell_exec("docker images -q img_consumer_sms");
 $imageExists = trim($rawOutput ?? '');
 if ($imageExists === '') {
-    echo "Construyendo imagen base 'pruebas_consumer_email'...\n";
-    $projectRoot = realpath(__DIR__ . '/../consumer_email');
-    $output = shell_exec("docker build -t pruebas_consumer_email " . escapeshellarg("{$projectRoot}") . " 2>&1");
+    echo "Construyendo imagen base 'img_consumer_sms'...\n";
+    $projectRoot = realpath(__DIR__ . '/../consumer_sms');
+    $output = shell_exec("docker build -t img_consumer_sms " . escapeshellarg("{$projectRoot}") . " 2>&1");
     echo $output;
 }
 
 while (true) {
-    echo "\n--- Verificando cola 'correos' ---\n";
+    echo "\n--- Verificando cola 'sms' ---\n";
 
     // Consultar Prometheus
     $ch = curl_init();
@@ -42,7 +42,7 @@ while (true) {
     echo "Consumidores necesarios: $neededConsumers\n";
 
     // Ver consumidores activos
-    $existing = shell_exec("docker ps --filter 'name=consumer_email_' --format '{{.Names}}'");
+    $existing = shell_exec("docker ps --filter 'name=consumer_sms_' --format '{{.Names}}'");
     $runningConsumers = array_filter(explode("\n", trim($existing ?? '')));
     $runningCount = count($runningConsumers);
 
@@ -53,10 +53,10 @@ while (true) {
         $commands = [];
 
         for ($i = $runningCount + 1; $i <= $neededConsumers; $i++) {
-            $name = "consumer_email_$i";
+            $name = "consumer_sms_$i";
             echo "Creando $name...\n";
 
-            $commands[] = "docker run -d --name $name --network rabbitmq_network pruebas_consumer_email &";
+            $commands[] = "docker run -d --name $name --network rabbitmq_network img_consumer_sms &";
 
             $log_data = [
                 'evento' => 'creacion',
@@ -78,7 +78,7 @@ while (true) {
         $toRemove = [];
 
         for ($i = $runningCount; $i > $neededConsumers; $i--) {
-            $name = "consumer_email_$i";
+            $name = "consumer_sms_$i";
             echo "Marcado para eliminación: $name\n";
             $toRemove[] = $name;
 
