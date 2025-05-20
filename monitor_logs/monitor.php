@@ -4,7 +4,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 
-$thresholdPerConsumer = 10000;
+$thresholdPerConsumer = 10;
 
 $prometheusUrl = 'http://prometheus:9090/api/v1/query';
 $query = 'rabbitmq_queue_messages_ready{queue="logs"}';
@@ -42,7 +42,7 @@ while (true) {
     echo "Consumidores necesarios: $neededConsumers\n";
 
     // Ver consumidores activos
-    $existing = shell_exec("docker ps --filter 'name=logs_' --format '{{.Names}}'");
+    $existing = shell_exec("docker ps --filter 'name=consumer_logs_' --format '{{.Names}}'");
     $runningConsumers = array_filter(explode("\n", trim($existing ?? '')));
     $runningCount = count($runningConsumers);
 
@@ -53,7 +53,7 @@ while (true) {
         $commands = [];
 
         for ($i = $runningCount + 1; $i <= $neededConsumers; $i++) {
-            $name = "logs_$i";
+            $name = "consumer_logs_$i";
             echo "Creando $name...\n";
 
             $commands[] = "docker run -d --name $name --network rabbitmq_network img_consumer_logs &";
