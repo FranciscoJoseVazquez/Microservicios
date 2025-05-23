@@ -256,14 +256,24 @@ RUN apt-get update && apt-get install -y \
     ...
 ```
 
-## Monitores
+# 📡 Sistema de Monitores para Escalado Dinámico
 
-Los contenedores monitor "vigilan" las cola haciendo consultas a las metricas generadas por prometheus y gestionan el escalado de los consumidores de la fila que vigilan
+Los **monitores** son scripts PHP que observan el estado de una cola de RabbitMQ, consultando métricas en tiempo real a través de **Prometheus**, y ajustando dinámicamente el número de contenedores consumidores en función de la carga actual.
 
-### Ej. de monitor
+---
 
-```Monitor Email
+## ⚙️ ¿Cómo funciona?
 
+1. El monitor consulta Prometheus para obtener la cantidad de mensajes pendientes en una cola específica.
+2. Calcula cuántos consumidores serían necesarios para procesarlos eficientemente.
+3. Crea o elimina contenedores `docker` para ajustarse a esa necesidad.
+4. Registra los eventos de escalado (creación o eliminación) en una cola de logs.
+
+---
+
+## 🧪 Ejemplo de Monitor: `monitor_email.php`
+
+```php
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
 
@@ -275,120 +285,42 @@ $thresholdPerConsumer = 10000;
 $prometheusUrl = 'http://prometheus:9090/api/v1/query';
 $query = 'rabbitmq_queue_messages_ready{queue="correos"}';
 
-// Conexión a RabbitMQ
 $connection = new AMQPStreamConnection('rabbitmq', 5672, 'ATMadmin', 'ATMadmin_1243');
 $channel = $connection->channel();
 $channel->queue_declare('logs', false, true, false, false);
 
-// Verifica si la imagen base ya existe
+// Construcción de imagen si no existe
 $rawOutput = shell_exec("docker images -q img_consumer_email");
-$imageExists = trim($rawOutput ?? '');
-if ($imageExists === '') {
-    echo "Construyendo imagen base 'img_consumer_email'...\n";
+if (trim($rawOutput) === '') {
     $projectRoot = realpath(__DIR__ . '/../consumer_email');
-    $output = shell_exec("docker build -t img_consumer_email " . escapeshellarg("{$projectRoot}") . " 2>&1");
-    echo $output;
+    shell_exec("docker build -t img_consumer_email " . escapeshellarg($projectRoot));
 }
 
 while (true) {
-    echo "\n--- Verificando cola 'correos' ---\n";
-
-    // Consultar Prometheus
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $prometheusUrl . '?query=' . urlencode($query));
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    $response = curl_exec($ch);
-    curl_close($ch);
-
+    $response = file_get_contents("$prometheusUrl?query=" . urlencode($query));
     $data = json_decode($response, true);
     $pendingMessages = isset($data['data']['result'][0]['value'][1]) ? (int)$data['data']['result'][0]['value'][1] : 0;
-    echo "[" . date('H:i:s') . "] Mensajes pendientes: $pendingMessages\n";
 
     $neededConsumers = ceil($pendingMessages / $thresholdPerConsumer);
-    echo "Consumidores necesarios: $neededConsumers\n";
+    $running = explode("\n", trim(shell_exec("docker ps --filter 'name=consumer_email_' --format '{{.Names}}'")));
+    $runningCount = count(array_filter($running));
 
-    // Ver consumidores activos
-    $existing = shell_exec("docker ps --filter 'name=consumer_email_' --format '{{.Names}}'");
-    $runningConsumers = array_filter(explode("\n", trim($existing ?? '')));
-    $runningCount = count($runningConsumers);
-
-    echo "Consumidores actuales: $runningCount\n";
-
-    // Escalar hacia arriba
     if ($neededConsumers > $runningCount) {
-        $commands = [];
-
         for ($i = $runningCount + 1; $i <= $neededConsumers; $i++) {
             $name = "consumer_email_$i";
-            echo "Creando $name...\n";
-
-            $commands[] = "docker run -d --name $name --network rabbitmq_network img_consumer_email &";
-
-            $log_data = [
-                'evento' => 'creacion',
-                'contenedor' => $name,
-                'timestamp' => date('c')
-            ];
-            $msglog = new AMQPMessage(json_encode($log_data), ['delivery_mode' => 2]);
-            $channel->basic_publish($msglog, '', 'logs');
+            shell_exec("docker run -d --name $name --network rabbitmq_network img_consumer_email &");
+            $msg = new AMQPMessage(json_encode(['evento' => 'creacion', 'contenedor' => $name, 'timestamp' => date('c')]), ['delivery_mode' => 2]);
+            $channel->basic_publish($msg, '', 'logs');
         }
-
-        // Ejecutar todos los comandos a la vez
-        foreach ($commands as $cmd) {
-            shell_exec($cmd);
-        }
-    }
-
-    // Escalar hacia abajo
-    if ($neededConsumers < $runningCount) {
-        $toRemove = [];
-
+    } elseif ($neededConsumers < $runningCount) {
         for ($i = $runningCount; $i > $neededConsumers; $i--) {
             $name = "consumer_email_$i";
-            echo "Marcado para eliminación: $name\n";
-            $toRemove[] = $name;
-
-            // Registrar evento
-            $log_data = [
-                'evento' => 'eliminacion',
-                'contenedor' => $name,
-                'timestamp' => date('c')
-            ];
-            $msglog = new AMQPMessage(json_encode($log_data), ['delivery_mode' => 2]);
-            $channel->basic_publish($msglog, '', 'logs');
-        }
-
-        if (!empty($toRemove)) {
-            $names = implode("\n", $toRemove);
-            echo "Eliminando contenedores en paralelo...\n";
-            shell_exec("echo \"$names\" | xargs -P 4 -n 1 docker rm -f");
+            shell_exec("docker rm -f $name");
+            $msg = new AMQPMessage(json_encode(['evento' => 'eliminacion', 'contenedor' => $name, 'timestamp' => date('c')]), ['delivery_mode' => 2]);
+            $channel->basic_publish($msg, '', 'logs');
         }
     }
+
+    sleep(10); // Intervalo entre chequeos
 }
-
-```
-
-### Importante
-
-Para que RabbitMQ permita que Prometheus haga consultas mas especificas, como mostrar los datos de una sola cola, hay que crear un archivo llamado **rabbitmq.conf**
-
-```rabbitmq.conf
-prometheus.return_per_object_metrics = true
-```
-
-despues en el dockerfile del contenedor RabbitMQ hay que indicar que se copie en la carpeta de configuracion con esta linea
-
-```Dockerfile
-COPY rabbitmq.conf /etc/rabbitmq/rabbitmq.conf
-```
-
-Por ultimo hay que que instalar Docker CLI para que el contenedor pueda enviar comandos a docker
-
-Para hacerlo en el Dockerfile de dicho contenedor hay que poner:
-
-```Dockerfile
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list && \
-    apt-get update && \
-    apt-get install -y docker-ce-cli
 ```
