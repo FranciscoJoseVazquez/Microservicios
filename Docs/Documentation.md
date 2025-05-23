@@ -1,3 +1,29 @@
+Índice
+
+Introducción
+
+Componentes del Sistema
+
+Flujo de Trabajo
+
+Arquitectura4.1 Diagrama de la Arquitectura4.2 Comunicación entre Microservicios
+
+Configuración de RabbitMQ
+
+Sender6.1 Flujo de un Sender6.2 Ejemplo de Código del Sender (PHP)
+
+Consumer7.1 Flujo de un Consumer7.2 Ejemplo de Código del Consumer (PHP)
+
+Formato de JSON
+
+Autentificación mediante Token Bearer9.1 Tipos de Token9.2 Restricciones de Uso de Token9.3 Envío del Token9.4 Gestión y Manejo de Tokens
+
+Despliegue10.1 Pasos de Despliegue10.2 Puertos de Despliegue
+
+Automatización y Escalado Dinámico con Docker, RabbitMQ y PHP11.1 Supervisord11.2 Sistema de Monitores para Escalado Dinámico11.2.1 Funcionamiento del Monitor11.2.2 Ejemplo de Monitor (monitor_email.php)11.3 Configuración de Prometheus y RabbitMQ11.4 Permisos para Ejecutar Docker desde Contenedor
+
+🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹
+
 # Proyecto de Microservicios utilizando RabbitMQ
 
 Este proyecto implementa una arquitectura de microservicios donde múltiples aplicaciones **sender** envían peticiones a una 
