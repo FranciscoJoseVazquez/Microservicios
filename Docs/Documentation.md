@@ -256,13 +256,13 @@ RUN apt-get update && apt-get install -y \
     ...
 ```
 
-# 📡 Sistema de Monitores para Escalado Dinámico
+# Sistema de Monitores para Escalado Dinámico
 
 Los **monitores** son scripts PHP que observan el estado de una cola de RabbitMQ, consultando métricas en tiempo real a través de **Prometheus**, y ajustando dinámicamente el número de contenedores consumidores en función de la carga actual.
 
 ---
 
-## ⚙️ ¿Cómo funciona?
+## ¿Cómo funciona?
 
 1. El monitor consulta Prometheus para obtener la cantidad de mensajes pendientes en una cola específica.
 2. Calcula cuántos consumidores serían necesarios para procesarlos eficientemente.
@@ -271,7 +271,7 @@ Los **monitores** son scripts PHP que observan el estado de una cola de RabbitMQ
 
 ---
 
-## 🧪 Ejemplo de Monitor: `monitor_email.php`
+## Ejemplo de Monitor: `monitor_email.php`
 
 ```php
 <?php
@@ -321,11 +321,11 @@ while (true) {
         }
     }
 
-    sleep(10); // Intervalo entre chequeos
+    sleep(10);
 }
 ```
 
-## 📊 Configuración de Prometheus y RabbitMQ
+## Configuración de Prometheus y RabbitMQ
 
 Para que Prometheus exponga las métricas por cola individual:
 
@@ -345,14 +345,15 @@ COPY rabbitmq.conf /etc/rabbitmq/rabbitmq.conf
 
 Para que el monitor pueda escalar usando docker run y docker rm, necesitas instalar el cliente de Docker (docker-ce-cli) dentro del contenedor monitor:
 
-
 ```dockerfile
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list && \
     apt-get update && \
     apt-get install -y docker-ce-cli
-También debes asegurarte de:
+
 ```
+También debes asegurarte de:
+
 Montar el socket de Docker con -v /var/run/docker.sock:/var/run/docker.sock al lanzar el contenedor monitor.
 
 Que el contenedor tenga permisos suficientes (usuario root o usuario en el grupo docker).
