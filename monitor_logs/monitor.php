@@ -32,7 +32,7 @@ while (true) {
     curl_setopt($ch, CURLOPT_URL, $prometheusUrl . '?query=' . urlencode($query));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     $response = curl_exec($ch);
-    curl_close($ch);
+    curl_close($ch); 
 
     $data = json_decode($response, true);
     $pendingMessages = isset($data['data']['result'][0]['value'][1]) ? (int)$data['data']['result'][0]['value'][1] : 0;
