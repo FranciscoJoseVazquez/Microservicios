@@ -324,3 +324,35 @@ while (true) {
     sleep(10); // Intervalo entre chequeos
 }
 ```
+
+## 📊 Configuración de Prometheus y RabbitMQ
+
+Para que Prometheus exponga las métricas por cola individual:
+
+Crea un archivo llamado rabbitmq.conf:
+
+```conf
+prometheus.return_per_object_metrics = true
+```
+
+En el Dockerfile del contenedor RabbitMQ, asegúrate de copiar el archivo:
+
+```dockerfile
+COPY rabbitmq.conf /etc/rabbitmq/rabbitmq.conf
+```
+
+## Permisos para ejecutar comandos Docker desde el contenedor
+
+Para que el monitor pueda escalar usando docker run y docker rm, necesitas instalar el cliente de Docker (docker-ce-cli) dentro del contenedor monitor:
+
+
+```dockerfile
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list && \
+    apt-get update && \
+    apt-get install -y docker-ce-cli
+También debes asegurarte de:
+```
+Montar el socket de Docker con -v /var/run/docker.sock:/var/run/docker.sock al lanzar el contenedor monitor.
+
+Que el contenedor tenga permisos suficientes (usuario root o usuario en el grupo docker).
